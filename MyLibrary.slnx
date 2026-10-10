@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="MyLibrary.Application/MyLibrary.Application.csproj" />
+  <Project Path="MyLibrary.Domain/MyLibrary.Domain.csproj" />
+  <Project Path="MyLibrary.Infrastructure/MyLibrary.Infrastructure.csproj" />
+  <Project Path="MyLibrary.Web/MyLibrary.Web.csproj" />
+</Solution>
