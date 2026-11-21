@@ -1,0 +1,46 @@
+﻿@model MyLibrary.Domain.Entities.Author
+
+@{
+    ViewData["Title"] = "Редактировать автора";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">Редактирование автора: @Model.DisplayName</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="AuthorID" />
+
+                        <div class="mb-3">
+                            <label asp-for="LastName" class="form-label">Фамилия</label>
+                            <input asp-for="LastName" class="form-control" placeholder="Например: Толстой" />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="FirstName" class="form-label">Имя</label>
+                            <input asp-for="FirstName" class="form-control" placeholder="Например: Лев" />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="MiddleName" class="form-label">Отчество <span class="text-muted">(необязательно)</span></label>
+                            <input asp-for="MiddleName" class="form-control" placeholder="Например: Николаевич" />
+                            <span asp-validation-for="MiddleName" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-block">
+                            <button type="submit" class="btn btn-warning btn-sm"><i class="bi bi-save"></i> Сохранить изменения</button>
+                            <a asp-action="Index" class="btn btn-secondary btn-sm">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

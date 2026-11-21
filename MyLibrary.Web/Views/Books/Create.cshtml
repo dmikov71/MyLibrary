@@ -1,0 +1,308 @@
+﻿@model MyLibrary.Web.Models.BookFormDto
+
+@{
+    ViewData["Title"] = "Добавить книгу";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">@ViewData["Title"]</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div class="row">
+                            <!-- Левая колонка -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Name" class="form-label">Название</label>
+                                    <input asp-for="Name" class="form-control" />
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                </div>
+
+                                <!-- Авторы -->
+                                <div class="mb-3">
+                                    <label class="form-label">Авторы</label>
+                                    <select asp-for="SelectedAuthorIds"
+                                            asp-items="ViewBag.Authors"
+                                            multiple
+                                            class="form-control select2-authors"
+                                            style="width: 100%;">
+                                    </select>
+                                    <div class="form-text">Начните вводить имя. Можно выбрать несколько авторов.</div>
+                                    <span asp-validation-for="SelectedAuthorIds" class="text-danger"></span>
+                                </div>
+
+                                <!-- Категория -->
+                                <div class="mb-3">
+                                    <label class="form-label">Категория</label>
+                                    <select asp-for="CategoryID" asp-items="ViewBag.Categories" class="form-select" id="categorySelect">
+                                        <option value="">-- Выберите категорию --</option>
+                                    </select>
+                                    <span asp-validation-for="CategoryID" class="text-danger"></span>
+                                </div>
+
+                                <!-- Жанр -->
+                                <div class="mb-3">
+                                    <label class="form-label">Жанр</label>
+                                    <select asp-for="GenreID" class="form-select" id="genreSelect">
+                                        <option value="" disabled selected>-- Сначала выберите категорию --</option>
+                                        @foreach (var genre in (IEnumerable<MyLibrary.Domain.Entities.Genre>)ViewBag.GenresList)
+                                        {
+                                            <option value="@genre.GenreID" data-category-id="@genre.CategoryID">@genre.Name</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="GenreID" class="text-danger"></span>
+                                </div>
+
+                                <!-- Поджанр -->
+                                <div class="mb-3" id="subgenreBlock" style="display: none;">
+                                    <label class="form-label">Поджанр</label>
+                                    <select asp-for="SubgenreID" class="form-select" id="subgenreSelect">
+                                        <option value="">-- Сначала выберите жанр --</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Правая колонка -->
+                            <div class="col-md-6">
+                                <!-- Место хранения -->
+                                <div class="mb-3">
+                                    <label class="form-label">Место хранения</label>
+                                    <select asp-for="PlaceID" asp-items="ViewBag.Places" class="form-select">
+                                        <option value="">-- Выберите место хранения --</option>
+                                    </select>
+                                    <span asp-validation-for="PlaceID" class="text-danger"></span>
+                                </div>
+
+                                <div class="row">
+                                    <!-- Вид книги -->
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="Type" class="form-label">Вид книги</label>
+                                        <select asp-for="Type" id="typeSelect" class="form-select">
+                                            <option value="">-- Выберите вид книги --</option>
+                                            @foreach (var type in Enum.GetValues(typeof(MyLibrary.Domain.Enums.BookType)).Cast<MyLibrary.Domain.Enums.BookType>())
+                                            {
+                                                <option value="@((int)type)">@MyLibrary.Application.Helpers.BookDisplayHelper.GetBookTypeText(type)</option>
+                                            }
+                                        </select>
+                                        <span asp-validation-for="Type" class="text-danger"></span>
+                                    </div>
+
+                                    <!-- Вид электронной книги -->
+                                    <div class="col-md-6 mb-3" id="subtypeBlock">
+                                        <label asp-for="Subtype" class="form-label">Формат эл. книги</label>
+                                        <select asp-for="Subtype" class="form-select">
+                                            <option value="">-- Выберите формат --</option>
+                                            @foreach (var subtype in Enum.GetValues(typeof(MyLibrary.Domain.Enums.ElectronicType)).Cast<MyLibrary.Domain.Enums.ElectronicType>())
+                                            {
+                                                <option value="@((int)subtype)">@MyLibrary.Application.Helpers.BookDisplayHelper.GetSubtypeText(subtype)</option>
+                                            }
+                                        </select>
+                                        <span asp-validation-for="Subtype" class="text-danger"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Тома и ISBN -->
+                                <div class="row">
+                                    <div class="col-md-6 mb-3" id="volumesBlock">
+                                        <label asp-for="Volumes" class="form-label">Кол-во томов</label>
+                                        <input asp-for="Volumes" type="number" class="form-control" min="1" value="1" />
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="ISBN" class="form-label">ISBN</label>
+                                        <input asp-for="ISBN" type="text" class="form-control" maxlength="17" placeholder="978-..." />
+                                        <span asp-validation-for="ISBN" class="text-danger"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Рейтинг -->
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <label class="form-label d-block">Рейтинг</label>
+                                        <input type="hidden" asp-for="Raiting" id="raitingInput" />
+                                        <div class="rating-group" id="ratingGroup">
+                                            @for (var i = 5; i >= 1; i--)
+                                            {
+                                                <span class="rating-star" data-value="@i" title="@i из 5" role="button" tabindex="0" aria-label="Звезда @i из 5">★</span>
+                                            }
+                                        </div>
+                                        <span asp-validation-for="Raiting" class="text-danger d-block mt-1"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Статус прочтения -->
+                        <div class="row mt-4 mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Статус прочтения</label>
+                                <div class="btn-group" role="group" aria-label="Read status">
+                                    @foreach (var status in Enum.GetValues(typeof(MyLibrary.Domain.Enums.Read)).Cast<MyLibrary.Domain.Enums.Read>())
+                                    {
+                                        var label = MyLibrary.Application.Helpers.ReadDisplayHelper.GetBookReadText(status);
+                                        <label class="btn btn-outline-secondary">
+                                            <input type="radio" name="Read" value="@((int)status)" @(Model.Read == status ? "checked" : "") />
+                                            @label
+                                        </label>
+                                    }
+                                </div>
+                                <span asp-validation-for="Read" class="text-danger d-block mt-1"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-block">
+                            <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-save"></i> Сохранить</button>
+                            <a asp-action="Index" class="btn btn-secondary btn-sm">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <!-- Скрипт для фильтрации ЖАНРОВ по КАТЕГОРИИ -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const categorySelect = document.getElementById('categorySelect');
+            const genreSelect = document.getElementById('genreSelect');
+
+            if (!categorySelect || !genreSelect) return;
+
+            const allGenreOptions = Array.from(genreSelect.options);
+
+            categorySelect.addEventListener('change', () => {
+                const selectedCategoryId = categorySelect.value;
+                genreSelect.innerHTML = '<option value="" disabled selected>-- Сначала выберите категорию --</option>';
+
+                if (!selectedCategoryId) return;
+
+                allGenreOptions.forEach(opt => {
+                    const optionCategoryId = opt.getAttribute('data-category-id');
+                    if (optionCategoryId === selectedCategoryId) {
+                        genreSelect.appendChild(opt.cloneNode(true));
+                    }
+                });
+                genreSelect.selectedIndex = 0;
+            });
+        });
+    </script>
+
+    <!-- Скрипт для ПОДЖАНРОВ -->
+    <script>
+        $(document).ready(function () {
+            const allSubgenres = @Html.Raw(Json.Serialize(ViewBag.SubgenresList));
+            const $genreSelect = $('#genreSelect');
+            const $subgenreBlock = $('#subgenreBlock');
+            const $subgenreSelect = $('#subgenreSelect');
+
+            function updateSubgenreOptions(genreId) {
+                $subgenreSelect.empty();
+                $subgenreSelect.append('<option value="">-- Выберите поджанр --</option>');
+
+                if (!genreId || genreId === '') {
+                    $subgenreBlock.hide();
+                    return;
+                }
+
+                const gId = parseInt(genreId, 10);
+                if (Number.isNaN(gId)) {
+                    $subgenreBlock.hide();
+                    return;
+                }
+
+                const filtered = allSubgenres.filter(s => s.genreId === gId);
+                filtered.forEach(s => {
+                    const option = $('<option>').val(s.id).text(s.name);
+                    $subgenreSelect.append(option);
+                });
+
+                if (filtered.length > 0) $subgenreBlock.show();
+                else $subgenreBlock.hide();
+            }
+
+            $genreSelect.on('change', function () {
+                updateSubgenreOptions($(this).val());
+            });
+            updateSubgenreOptions($genreSelect.val());
+        });
+    </script>
+
+    <!-- Инициализация Select2 -->
+    <script>
+        $(document).ready(function () {
+            $('.select2-authors').select2({
+                placeholder: 'Начните вводить имя...',
+                allowClear: true,
+                language: {
+                    noResults: function () { return "Автор не найден"; },
+                    searching: function () { return "Поиск..."; }
+                }
+            });
+        });
+    </script>
+
+    <!-- Скрипт для типов книг -->
+    <script>
+        $(document).ready(function () {
+            const BOOK_TYPE_PRINTED = 1;
+            const BOOK_TYPE_ELECTRONIC = 2;
+            const $typeSelect = $('#typeSelect');
+            const $subtypeBlock = $('#subtypeBlock');
+            const $volumesBlock = $('#volumesBlock');
+
+            function updateVisibility() {
+                const selectedValue = parseInt($typeSelect.val(), 10);
+                if (selectedValue === BOOK_TYPE_ELECTRONIC) {
+                    $subtypeBlock.show();
+                    $volumesBlock.hide();
+                } else {
+                    $subtypeBlock.hide();
+                    $volumesBlock.show();
+                }
+            }
+            updateVisibility();
+            $typeSelect.on('change', updateVisibility);
+        });
+    </script>
+
+    <!-- Скрипт для рейтинга -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const group = document.getElementById('ratingGroup');
+            const input = document.getElementById('raitingInput');
+            if (!group || !input) return;
+
+            const stars = Array.from(group.querySelectorAll('.rating-star'));
+            let current = parseInt(input.value, 10) || 0;
+
+            function paint(value) {
+                stars.forEach(star => {
+                    const v = parseInt(star.dataset.value, 10);
+                    star.classList.toggle('active', v <= value);
+                });
+            }
+
+            stars.forEach(star => {
+                const v = parseInt(star.dataset.value, 10);
+                star.addEventListener('mouseenter', () => paint(v));
+                star.addEventListener('mouseleave', () => paint(current));
+                star.addEventListener('click', () => {
+                    current = (v === current) ? v - 1 : v;
+                    input.value = current;
+                    paint(current);
+                });
+            });
+            paint(current);
+        });
+    </script>
+}

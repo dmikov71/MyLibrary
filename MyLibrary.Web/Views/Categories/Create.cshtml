@@ -1,0 +1,38 @@
+﻿@model MyLibrary.Domain.Entities.Category
+
+@{
+    ViewData["Title"] = "Добавить категорию";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">@ViewData["Title"]</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label">Название категории</label>
+                            <input asp-for="Name" class="form-control" placeholder="Например: Художественная литература" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Code" class="form-label">Код категории</label>
+                            <input asp-for="Code" class="form-control" />
+                            <span asp-validation-for="Code" class="text-danger"></span>
+                        </div>
+                        <div class="d-grid gap-2 d-md-block">
+                            <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-save"></i>  Сохранить</button>
+                            <a asp-action="Index" class="btn btn-secondary btn-sm">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,231 @@
+﻿@model IEnumerable<MyLibrary.Domain.Entities.Genre>
+
+
+@{
+    ViewData["Title"] = "Жанры и поджанры";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="book-data-zagolovok">@ViewData["Title"]</h2>
+        <a asp-action="Create" class="btn btn-sm btn-success">
+            <i class="bi bi-plus-lg"></i> Добавить жанр
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            Пока нет ни одного жанра. Добавьте первый, чтобы начать работу с поджанрами!
+        </div>
+    }
+    else
+    {
+        <!-- Аккордеон -->
+        <div class="accordion" id="genresAccordion">
+            @foreach (var genre in Model)
+            {
+                // Безопасный подсчёт поджанров (защита от null)
+                int subgenreCount = genre.Subgenres?.Count() ?? 0;
+                string collapseId = $"collapse-{genre.GenreID}";
+                string headerId = $"heading-{genre.GenreID}";
+
+                <div class="accordion-item border-0 mb-3 shadow-sm rounded">
+                    <!-- Заголовок аккордеона -->
+                    <h2 class="accordion-header" id="@headerId">
+                        <button class="accordion-button @(subgenreCount > 0 ? "" : "collapsed")"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#@collapseId"
+                                aria-expanded="@(subgenreCount > 0 ? "true" : "false")"
+                                aria-controls="@collapseId">
+
+                            <span class="fw-bold me-3">@genre.Name</span>
+
+                            @if (subgenreCount > 0)
+                            {
+                                <span class="badge bg-secondary rounded-pill">
+                                    @subgenreCount @(subgenreCount == 1 ? "поджанр" : "поджанра/поджанров")
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">Нет поджанров</span>
+                            }
+                        </button>
+                    </h2>
+
+                    <!-- Тело аккордеона -->
+                    <div id="@collapseId" class="accordion-collapse collapse @(subgenreCount > 0 ? "show" : "")"
+                         data-bs-parent="#genresAccordion">
+
+                        <div class="accordion-body p-4">
+
+                            @if (subgenreCount == 0)
+                            {
+                                <!-- Сценарий: поджанров пока нет -->
+                                <div class="text-center py-4 border rounded bg-light">
+                                    <p class="text-muted mb-3">Для этого жанра пока не создано поджанров.</p>
+
+                                    <a asp-controller="Subgenres" asp-action="Create" asp-route-genreId="@genre.GenreID"
+                                       class="btn btn-primary btn-sm">
+                                        <i class="bi bi-bookmark-plus me-2"></i>Добавить первый поджанр
+                                    </a>
+                                </div>
+                            }
+                            else
+                            {
+                                <!-- Сценарий: поджанры есть -->
+                                <div class="row g-4 align-items-start">
+
+                                    <!-- Левая часть: список поджанров -->
+                                    <div class="col-md-8">
+                                        <ul class="list-group list-group-flush shadow-sm rounded border">
+                                            @foreach (var sub in genre.Subgenres.OrderBy(s => s.Name))
+                                            {
+                                                <li class="list-group-item d-flex justify-content-between align-items-center border-0 p-3">
+                                                    <span>
+                                                        <i class="bi bi-chevron-right text-muted me-2"></i>
+                                                        @sub.Name
+                                                    </span>
+                                                    <div>
+                                                        <a asp-controller="Subgenres" asp-action="Edit" asp-route-id="@sub.SubgenreID"
+                                                           class="btn btn-sm btn-outline-primary me-1">
+                                                            <i class="bi bi-pencil-fill"></i>
+                                                        </a>
+                                                        <button type="button"
+                                                                class="btn btn-sm btn-outline-danger"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#subgenreDeleteModal"
+                                                                data-subgenre-id="@sub.SubgenreID"
+                                                                data-subgenre-name="@sub.Name">
+                                                            <i class="bi bi-trash-fill"></i>
+                                                        </button>
+                                                    </div>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+
+                                    <!-- Правая часть: панель действий (Добавить) -->
+                                    <div class="col-md-4 d-flex align-items-start">
+                                        <div class="card w-100 border-0 shadow-sm h-100">
+                                            <div class="card-body p-3 bg-white rounded">
+                                                <h6 class="card-title text-primary fw-bold mb-2">
+                                                    <i class="bi bi-plus-circle me-2"></i>Действия
+                                                </h6>
+                                                <p class="small text-muted mb-3">Жанр: <strong>@genre.Name</strong></p>
+
+                                                <a asp-controller="Subgenres" asp-action="Create" asp-route-genreId="@genre.GenreID"
+                                                   class="btn btn-primary btn-sm">
+                                                    + Новый поджанр
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Действия с самим жанром -->
+                            <hr class="my-4 border-top-0 opacity-25">
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a asp-action="Edit" asp-route-id="@genre.GenreID" class="btn btn-warning btn-sm">
+                                    <i class="bi bi-pencil"></i> Редактировать жанр
+                                </a>
+
+                                <button type="button" class="btn btn-danger btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#genreDeleteModal"
+                                        data-genre-id="@genre.GenreID"
+                                        data-genre-name="@genre.Name">
+                                    <i class="bi bi-trash"></i> Удалить жанр
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Модальное окно удаления жанра -->
+<div class="modal fade" id="genreDeleteModal" tabindex="-1" aria-labelledby="genreDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="genreDeleteModalLabel">Подтверждение удаления жанра</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Вы уверены, что хотите удалить жанр <strong id="genreNameToDelete"></strong>?
+            </div>
+            <div class="modal-footer">
+                <form asp-action="Delete" asp-method="post" style="display:inline;">
+                    <input type="hidden" name="id" id="genreIdToDelete" />
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Да, удалить</button>
+                </form>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно удаления поджанра -->
+<div class="modal fade" id="subgenreDeleteModal" tabindex="-1" aria-labelledby="subgenreDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="subgenreDeleteModalLabel">Подтверждение удаления поджанра</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Вы уверены, что хотите удалить поджанр <strong id="subgenreNameToDelete"></strong>?
+            </div>
+            <div class="modal-footer">
+                <form asp-controller="Subgenres" asp-action="Delete" asp-method="post" style="display:inline;">
+                    <input type="hidden" name="id" id="subgenreIdToDelete" />
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Да, удалить</button>
+                </form>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Модалка для жанра
+            const genreModalEl = document.getElementById('genreDeleteModal');
+            if (genreModalEl) {
+                const genreModal = new bootstrap.Modal(genreModalEl);
+                genreModalEl.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    const genreId = button.getAttribute('data-genre-id');
+                    const genreName = button.getAttribute('data-genre-name');
+
+                    document.getElementById('genreIdToDelete').value = genreId;
+                    document.getElementById('genreNameToDelete').textContent = genreName;
+                    document.getElementById('genreFkWarning').classList.add('d-none');
+                });
+            }
+
+            // Модалка для поджанра
+            const subgenreModalEl = document.getElementById('subgenreDeleteModal');
+            if (subgenreModalEl) {
+                const subgenreModal = new bootstrap.Modal(subgenreModalEl);
+                subgenreModalEl.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    const subgenreId = button.getAttribute('data-subgenre-id');
+                    const subgenreName = button.getAttribute('data-subgenre-name');
+
+                    document.getElementById('subgenreIdToDelete').value = subgenreId;
+                    document.getElementById('subgenreNameToDelete').textContent = subgenreName;
+                    document.getElementById('subgenreFkWarning').classList.add('d-none');
+                });
+            }
+        });
+    </script>
+}
+

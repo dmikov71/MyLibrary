@@ -1,0 +1,153 @@
+﻿@model MyLibrary.Web.Models.BookViewModel
+@await Html.PartialAsync("~/Views/Shared/_DeleteModal.cshtml")
+
+@{
+    ViewData["Title"] = "Карточка книги";
+}
+
+<h2 class="home-title">@ViewData["Title"]: <span class="book-data-zagolovok">@Model.Name</span></h2>
+
+<div class="card card-paper-bg">
+    <div class="card-body paper-content-layer">
+        <div class="row">
+            <div class="col-md-4">
+                <img src="@(string.IsNullOrEmpty(Model.CoverImage) ? "/img/no-cover.png" : Model.CoverImage)"
+                     alt="@Model.Name"
+                     class="img-fluid rounded"
+                     style="max-width: 100%; height: auto;" />
+            </div>
+            <div class="col-md-8">
+                <dl class="row">
+                    <dt class="col-sm-4">Инвентарный номер</dt>
+                    <dd class="col-sm-8"><span class="inv-number">@Model.DisplayLibraryNumber</span></dd>
+
+                    <dt class="col-sm-4">Название</dt>
+                    <dd class="col-sm-8"><span class="book-data-text">@Model.Name</span></dd>
+
+                    <dt class="col-sm-4">Автор</dt>
+                    <dd class="col-sm-8"><span class="book-data-text">@Model.AuthorsDisplay</span></dd>
+
+                    <dt class="col-sm-4">Категория</dt>
+                    <dd class="col-sm-8"><span class="book-data-text">@Model.CategoryName</span></dd>
+
+                    <dt class="col-sm-4">Жанр / Поджанр</dt>
+                    <dd class="col-sm-8"><span class="book-data-text">@Model.GenreName @(string.IsNullOrEmpty(Model.SubgenreName) ? "" : $"/ {Model.SubgenreName}")</span></dd>
+
+                    <dt class="col-sm-4">Тип @(Model.BookTypeDisplay == "Электронная" ? "/ Подтип" : "")</dt>
+
+                    <dd class="col-sm-8">
+                        <span class="book-data-text">
+                            @if (Model.BookTypeDisplay == "Электронная")
+                            {
+                                <text>@Model.BookTypeDisplay / @Model.SubtypeDisplay</text>
+                            }
+                            else
+                            {
+                                @Model.BookTypeDisplay
+                            }
+                        </span>
+                    </dd>
+
+
+                    <dt class="col-sm-4">Место хранения</dt>
+                    <dd class="col-sm-8"><span class="book-data-text">@Model.PlaceName</span></dd>
+                    @if (Model.BookTypeDisplay == "Печатная")
+                    {
+                        <dt class="col-sm-4">Кол-во томов</dt>
+                        <dd class="col-sm-8"><span class="book-data-text">@Model.Volumes</span></dd>
+                    }
+
+                    <dt class="col-sm-4">ISBN</dt>
+                    <dd class="col-sm-8">
+                        <div class="isbn-line">
+                            @if (!string.IsNullOrEmpty(Model.ISBN))
+                            {
+                                <span class="book-data-text isbn-value">@Model.ISBN</span>
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <form asp-action="FillByIsbn" asp-route-id="@Model.Id" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-outline-primary btn-sm">
+                                            Заполнить по ISBN
+                                        </button>
+                                    </form>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </div>
+                    </dd>
+
+
+
+                    @if (!string.IsNullOrEmpty(Model.Publishing))
+                    {
+                        <dt class="col-sm-4">Издательство</dt>
+                        <dd class="col-sm-8"><span class="book-data-text">@Model.Publishing</span></dd>
+                    }
+                    @if ((Model.Year != 0))
+                    {
+                        <dt class="col-sm-4">Год издания</dt>
+                        <dd class="col-sm-8"><span class="book-data-text">@Model.Year</span></dd>
+                    }
+                     @if ((Model.Pages != 0))
+                    {
+                        <dt class="col-sm-4">Страниц</dt>
+                        <dd class="col-sm-8"><span class="book-data-text">@Model.Pages</span></dd>
+                    }
+
+                    <dt class="col-sm-4">Статус прочтения</dt>
+                    <dd class="col-sm-8">
+                        @{
+                            // Сравниваем строку, чтобы понять, какой цвет нужен
+                            string colorClass = Model.ReadDisplay switch
+                            {
+                                "Не прочитана" => "status-no-read",
+                                "Прочитана" => "status-read",
+                                "Хочу прочитать" => "status-want-read",
+                                "Хочу перечитать" => "status-want-repeat",
+                                _ => ""
+                            };
+                        }
+                        <span class="book-data-text @colorClass">@Model.ReadDisplay</span>
+                    </dd>
+
+                    <dt class="col-sm-4">Рейтинг</dt>
+                    <dd class="col-sm-8">
+                        @for (var i = 1; i <= 5; i++)
+                        {
+                            var isFilled = Model.Raiting >= i;
+                            <span class="rating-star-readonly"
+                                  style="color: @(isFilled ? "#d4a017" : "#e9ecef");">★</span>
+                        }
+                    </dd>
+
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    @if (User.IsInRole("Admin"))
+    {
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-sm">
+            <i class="bi bi-pencil"></i> Редактировать книгу
+        </a>
+
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" style="display:inline;">
+            @Html.AntiForgeryToken()
+            <button type="button" class="btn btn-danger btn-sm" 
+            title="Удалить книгу" data-bs-toggle="modal" 
+            data-bs-target="#deleteModal" 
+            data-item-id="@Model.Id"
+            data-item-name="@Model.Name">
+                <i class="bi bi-trash"></i> Удалить книгу</button>
+        </form>
+    }
+    <a asp-action="Index" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Назад к списку</a>
+</div>
+
+<script src="~/js/common-delete-modal.js"></script>

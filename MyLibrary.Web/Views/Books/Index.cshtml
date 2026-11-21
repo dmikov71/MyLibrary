@@ -1,0 +1,90 @@
+﻿@model PaginatedList<MyLibrary.Web.Models.BookViewModel>
+
+@{
+    ViewData["Title"] = "Каталог книг";
+}
+<h2 class="book-data-zagolovok">@ViewData["Title"]</h2>
+<div class="d-flex align-items-center justify-content-between mb-3">
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            Пока нет ни одной книги. Добавьте первую, предварительно добавив автора, категорию и жанр!
+        </div>
+    }
+    else {
+<form asp-action="Index" method="get" class="search">
+    <input type="text" name="search" value="@Context.Request.Query["search"]" placeholder="Поиск по названию или автору" />
+    <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-search me-1"></i> Найти</button>
+    <a asp-action="Index" class="btn btn-secondary btn-sm"> <i class="bi bi-eraser me-1"></i> Очистить поле</a>
+</form>
+    }
+@if (User.IsInRole("Admin"))
+{
+    <a asp-action="Create" class="btn btn-sm btn-success me-2"><i class="bi bi-plus-lg"></i> Добавить книгу</a>
+}
+</div>
+@if (Model.Any())
+{
+    <table class="table table-hover">
+        <thead class="table-primary">
+            <tr>
+                <th>Инв. №</th>
+                <th>Название</th>
+                <th>Автор</th>
+                <th>Вид книги</th>
+                <th>Кол-во томов</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var b in Model)
+            {
+                <tr data-url="@Url.Action("Details", "Books", new { id = b.Id })">
+                    <td><span class="inv-number">@b.DisplayLibraryNumber</span></td>
+                    <td><span class="book-data-text">@b.Name</span></td>
+                    <td><span class="book-data-text">@b.AuthorsDisplay</span></td>
+                    <td><span class="book-data-text">@b.BookTypeDisplay</span></td>
+                    <td align="center"><span class="book-data-text">@(b.BookTypeDisplay == "Печатная" ? @b.Volumes : "-")</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@if (Model.TotalPages > 1)
+{
+    <nav aria-label="Постраничная навигация">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                <a class="page-link" asp-action="Index"
+                   asp-route-page="@(Model.PageIndex - 1)"
+                   asp-route-search="@ViewBag.CurrentSearch">‹ Назад</a>
+            </li>
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.PageIndex ? "active" : "")">
+                    <a class="page-link" asp-action="Index"
+                       asp-route-page="@i"
+                       asp-route-search="@ViewBag.CurrentSearch">@i</a>
+                </li>
+            }
+            <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                <a class="page-link" asp-action="Index"
+                   asp-route-page="@(Model.PageIndex + 1)"
+                   asp-route-search="@ViewBag.CurrentSearch">Вперёд ›</a>
+            </li>
+        </ul>
+    </nav>
+}
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('tr[data-url]').forEach(row => {
+            // Курсор в виде «руки», чтобы было понятно, что строка кликабельная
+            row.addEventListener('click', () => {
+                const url = row.getAttribute('data-url');
+                if (url) {
+                    window.location.href = url;
+                }
+            });
+        });
+    </script>
+}
